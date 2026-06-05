@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../core/types.dart';
 import '../utils/logger.dart';
@@ -74,7 +76,7 @@ class VoiceServiceCallbacks {
 class VoiceService {
   final VoiceServiceConfig config;
 
-  IOWebSocketChannel? _channel;
+  WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   VoiceServiceCallbacks _callbacks = const VoiceServiceCallbacks();
   String? _sessionHandle;
@@ -105,11 +107,20 @@ class VoiceService {
       final headers = _resolveConnectionHeaders();
 
       Logger.info('VoiceService connecting to $uri');
-      _channel = IOWebSocketChannel.connect(
-        uri,
-        headers: headers.isEmpty ? null : headers,
-        pingInterval: const Duration(seconds: 20),
-      );
+      if (kIsWeb) {
+        // PATCH (shopflow demo): browsers can't use IOWebSocketChannel (dart:io)
+        // — it throws "Unsupported operation: Platform._version" — and can't set
+        // custom WebSocket headers anyway. Use the cross-platform channel; the
+        // direct-Gemini auth is carried in the ?key= query param, so the (empty)
+        // headers aren't needed on web.
+        _channel = WebSocketChannel.connect(uri);
+      } else {
+        _channel = IOWebSocketChannel.connect(
+          uri,
+          headers: headers.isEmpty ? null : headers,
+          pingInterval: const Duration(seconds: 20),
+        );
+      }
 
       _subscription = _channel!.stream.listen(
         (event) {

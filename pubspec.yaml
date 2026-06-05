@@ -66,6 +66,12 @@ dev_dependencies:
 dependency_overrides:
   flutter_sound:
     path: third_party/flutter_sound
+  # Patched copy of the SDK: the agent chat box is rendered above MaterialApp, so
+  # it lacks DefaultTextEditingShortcuts and Backspace/Delete/arrows don't work on
+  # desktop. The patch wraps the field in DefaultTextEditingShortcuts and enables
+  # selection. See third_party/mobileai_flutter/lib/src/widgets/agent_chat_bar.dart.
+  mobileai_flutter:
+    path: third_party/mobileai_flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -393,10 +393,9 @@ packages:
   mobileai_flutter:
     dependency: "direct main"
     description:
-      name: mobileai_flutter
-      sha256: f41d76cf1e770fd90c15d610199283221372405c18fb50f593620191ebeef77a
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/mobileai_flutter"
+      relative: true
+    source: path
     version: "0.2.7"
   node_preamble:
     dependency: transitive

@@ -1,0 +1,30 @@
+name: mobileai_flutter
+description: "MobileAI for Flutter. Embed UI-aware AI agents with chat, rich blocks, zones, navigation, and support workflows."
+version: 0.2.7
+homepage: "https://github.com/mobileai/mobileai_flutter"
+repository: "https://github.com/mobileai/mobileai_flutter"
+issue_tracker: "https://github.com/mobileai/mobileai_flutter/issues"
+
+environment:
+  sdk: ^3.11.4
+  flutter: ">=3.24.0"
+
+dependencies:
+  audio_session: ^0.2.2
+  collection: ^1.19.1
+  flutter:
+    sdk: flutter
+  flutter_sound: ^9.30.0
+  google_generative_ai: ^0.4.7
+  http: ^1.6.0
+  record: ^6.2.0
+  shared_preferences: ^2.5.3
+  uuid: ^4.5.3
+  web_socket_channel: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:

@@ -1,0 +1,63 @@
+# CLAUDE.md
+
+Guidance for Claude Code working in this repository.
+
+## What this is
+
+A Flutter demo app (**ShopFlow**, an e-commerce sample) that exercises the
+[`mobileai_flutter`](https://pub.dev/packages/mobileai_flutter) SDK — an in-app,
+UI-aware AI agent with text + voice and screen-aware navigation. It is adapted
+from that package's official `example/` app, but depends on the **published**
+package (`mobileai_flutter: ^0.2.7`) rather than a local path.
+
+## Commands
+
+- Install deps: `flutter pub get`
+- Static analysis: `flutter analyze` (keep it clean)
+- Tests: `flutter test`; e2e: `flutter test integration_test`
+- Run: `flutter run -d chrome` (web), `-d windows`, `-d macos`, or a device id
+- Build: `flutter build web` / `apk` / `macos` / `windows` / `linux`
+
+Pass configuration as Dart defines (all optional; defaults work):
+
+```bash
+flutter run --dart-define-from-file=.env
+# or
+flutter run --dart-define=EXPO_PUBLIC_MOBILEAI_KEY=... --dart-define=GEMINI_API_KEY=...
+```
+
+## Key files
+
+- `lib/main.dart` — app entry; constructs the `AIAgent` widget and resolves the
+  hosted text/voice proxy URLs (or the direct-Gemini fallback) from Dart defines.
+- `lib/router.dart` — `go_router` config: a `ShellRoute` with a bottom nav
+  (home/search/cart/profile) plus deep settings routes.
+- `lib/ai_screen_map.dart` — **GENERATED** `ScreenMap` the agent uses to reason
+  about routes. Regenerate with the package tool if you change routes:
+  `dart run tool/generate_screen_map.dart` (from a checkout of the package),
+  then keep `screens`/`navigatesTo`/`chains` in sync with `router.dart`.
+- `lib/providers/` — Riverpod providers (`cart`, `data`, `preferences`).
+- `lib/data/seed_data.dart` — in-memory catalog used by the screens.
+
+## Conventions & gotchas
+
+- **Dart defines, not `.env` at runtime.** Values are compiled in via
+  `String.fromEnvironment`. There is no dotenv loader; `.env` is only consumed by
+  `--dart-define-from-file`. `.env` is git-ignored — never commit real secrets.
+- The committed default `EXPO_PUBLIC_MOBILEAI_KEY` is a **publishable**
+  (`mobileai_pub_…`) key and matches the upstream package example. It is safe to
+  be public; do not replace it with a secret key.
+- **Voice needs mic permissions** (already configured): Android `RECORD_AUDIO`,
+  iOS/macOS `NSMicrophoneUsageDescription`, macOS `audio-input` entitlement. If
+  you add platforms or run `flutter create .` to regenerate scaffolding, re-add
+  these.
+- `router.dart` and `ai_screen_map.dart` must stay consistent — route paths in
+  the screen map are matched against the router's locations.
+- Requires Flutter ≥ 3.24.0 / Dart ≥ 3.11.4 (developed on Flutter 3.44.1).
+
+## When changing navigation
+
+1. Edit `lib/router.dart`.
+2. Update `lib/ai_screen_map.dart` (titles, `navigatesTo`, `chains`) so the agent
+   knows about the new/changed routes.
+3. `flutter analyze` and run a manual agent flow to confirm navigation works.

@@ -51,6 +51,17 @@ flutter run --dart-define=EXPO_PUBLIC_MOBILEAI_KEY=... --dart-define=GEMINI_API_
   iOS/macOS `NSMicrophoneUsageDescription`, macOS `audio-input` entitlement. If
   you add platforms or run `flutter create .` to regenerate scaffolding, re-add
   these.
+- **Windows build patch (vendored):** `flutter_sound` 9.30.0's Windows plugin is
+  broken (native code named `taudio` vs pubspec `pluginClass:
+  FlutterSoundPluginCApi`). We vendor a patched copy at `third_party/flutter_sound`
+  and point to it via `dependency_overrides` in `pubspec.yaml`. The patch lives in
+  `third_party/flutter_sound/windows/` (added `include/flutter_sound/…_c_api.h`, a
+  bridging `FlutterSoundPluginCApiRegisterWithRegistrar` export, and renamed the
+  CMake target to `flutter_sound_plugin`). Re-apply if `flutter_sound` is bumped.
+- **Gemini "model overloaded" (503)** and **"microphone unavailable"** are usually
+  environmental, not bugs: the former is transient Gemini capacity (retry / switch
+  model / use the hosted proxy); the latter is usually the wrong default input
+  device (e.g. a Bluetooth hands-free), not the SDK.
 - `router.dart` and `ai_screen_map.dart` must stay consistent — route paths in
   the screen map are matched against the router's locations.
 - Requires Flutter ≥ 3.24.0 / Dart ≥ 3.11.4 (developed on Flutter 3.44.1).

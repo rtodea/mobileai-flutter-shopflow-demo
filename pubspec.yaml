@@ -57,6 +57,16 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# Windows desktop build fix: flutter_sound 9.30.0 ships a broken Windows plugin
+# (its native code is named `taudio`, but its pubspec declares pluginClass
+# `FlutterSoundPluginCApi`), so Flutter's generated registrant can't find the
+# expected CMake target / C symbol / header and the Windows build fails. We
+# vendor a patched copy that bridges the names.
+# See third_party/flutter_sound/windows/ and the README "Windows" notes.
+dependency_overrides:
+  flutter_sound:
+    path: third_party/flutter_sound
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

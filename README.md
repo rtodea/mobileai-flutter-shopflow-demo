@@ -137,7 +137,9 @@ choco install flutter
 
 - **Web:** `flutter run -d chrome` (Chrome required).
 - **Windows desktop:** install "Desktop development with C++" via Visual Studio
-  Build Tools, then `flutter run -d windows`.
+  Build Tools, then `flutter run -d windows`. (The Windows build needs a patched
+  `flutter_sound`; this repo vendors it under `third_party/flutter_sound`, so it
+  builds with no extra steps — see Troubleshooting.)
 - **Android:** install Android Studio + SDK, accept licenses
   (`flutter doctor --android-licenses`), then `flutter run -d <emulator>`.
 
@@ -219,7 +221,44 @@ See the package docs for the full API:
 
 ---
 
+## Troubleshooting
+
+### "Model is not available, due to high demand" / overloaded
+Gemini is returning **HTTP 503 (model overloaded)** — a transient, server-side
+capacity issue, common on the free tier and on preview / native-audio (voice)
+models. Your key and model are fine; the request just got throttled.
+- Retry — it's intermittent.
+- Switch to a steadier text model, e.g. pass `model: 'gemini-2.0-flash'` (or
+  `gemini-flash-latest`) to `AIAgent` in `lib/main.dart`.
+- The free tier has low rate limits (~10 req/min); enable billing for higher
+  limits.
+- For dependable voice, prefer the **hosted MobileAI proxy** over direct Gemini
+  (set `EXPO_PUBLIC_MOBILEAI_BASE_URL` + a real `EXPO_PUBLIC_MOBILEAI_KEY`).
+
+### "Microphone not available / unavailable" (desktop)
+Having mic *privacy* enabled isn't enough — the recorder opens your **default
+input device**. If a stale/disconnected Bluetooth "Hands-Free" mic is the
+default, recording fails.
+- Settings → System → Sound → Input → select a real mic (e.g. your laptop mic
+  array), not a Bluetooth hands-free profile.
+- Sound Control Panel → Recording → set it as **Default Device** *and* **Default
+  Communications Device**; disable disconnected Bluetooth entries.
+- Verify Settings → Privacy & security → Microphone → access + "let desktop apps
+  access your microphone" are **On**.
+- Voice also needs the live WebSocket to connect; if the voice model is
+  overloaded you'll still see the model error above even with a working mic.
+
+### Windows build: `No target "flutter_sound_plugin"`
+`flutter_sound` 9.30.0 ships a broken Windows plugin (its native code is named
+`taudio`, but its pubspec declares `pluginClass: FlutterSoundPluginCApi`), so
+Flutter's generated registrant can't find the expected target/symbol/header.
+This repo includes a **patched copy under `third_party/flutter_sound`** wired via
+`dependency_overrides` in `pubspec.yaml`, so `flutter build windows` works out of
+the box. If you bump `flutter_sound`, re-apply or drop that patch.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). The `mobileai_flutter` package is MIT-licensed by
-its authors; this repo adapts that package's example app.
+its authors; this repo adapts that package's example app. The vendored
+`third_party/flutter_sound` is a patched copy of the MIT-licensed `flutter_sound`
+package (see its own LICENSE).

@@ -1,7 +1,8 @@
 # TODO / Handoff — ShopFlow (mobileai_flutter demo)
 
 A working-state handoff so this can be picked up on another machine. Read top to
-bottom once; the **immediate next task is "Run on Android"** (section 4).
+bottom once. **Android build + launch + text-nav are now validated (2026-06-05);
+the remaining task is Android voice** (section 4).
 
 Repo: `git@github.com:rtodea/mobileai-flutter-shopflow-demo.git` (branch `main`).
 Last commit at handoff: `9cb4e65`.
@@ -33,7 +34,10 @@ Dart ≥3.11.4).
 | **Web text agent** | ❌ blocked by **CORS** (Gemini REST isn't callable from a browser) |
 | **Web voice** | ⚠️ connects + mic + playback work, but `flutter_sound` web audio is **choppy/garbled** → commands mis-transcribed |
 | **Windows voice** | ❌ not possible — `flutter_sound`'s Windows plugin is a stub (no recorder/player) |
-| **Android / iOS voice** | ⏳ **not yet run — this is the next task; it's the intended platform for voice** |
+| **Android build + launch** | ✅ verified 2026-06-05 (emulator: Pixel 7 / API 34) |
+| **Android text agent** (direct Gemini) | ✅ "go to my cart" → agent taps Cart tab → navigates (`gemini-2.5-flash`) |
+| **Android voice** | ⏳ **not yet run — the remaining next task; intended platform for voice** |
+| **iOS** | ⏳ not yet run |
 
 **Why mobile next:** on Android/iOS, `flutter_sound` has real audio support and
 there's no CORS, so both text and voice should "just work." The Gemini key and the
@@ -60,14 +64,19 @@ Then create your `.env` (section 5) and run (section 7).
 
 ---
 
-## 4. ⭐ IMMEDIATE NEXT TASK: run on Android
+## 4. ⭐ NEXT TASK: Android voice (build + launch + text are ✅)
 
-We confirmed everything except an Android **device/emulator**. On the previous
-laptop: SDK platform `android-36.1`, build-tools, platform-tools, the emulator
-engine, and **licenses** were installed, but there was **no AVD**, **no system
-image**, and `cmdline-tools` was empty.
+> **Update 2026-06-05:** Android is fully set up and the **build, launch, and
+> text agent are verified** on a Pixel 7 / API 34 emulator (`flutter build apk` ✓;
+> "go to my cart" → agent navigates to the Cart tab via `gemini-2.5-flash`). The
+> per-machine toolchain (Flutter at `C:\src\flutter`, the `ShopFlowPixel` AVD,
+> `JAVA_HOME` → Android Studio JBR, SDK packages) is documented in
+> `~/docs/development.md`. **What's left is the voice path** — speak a command and
+> confirm transcription + navigation + clear audio. Use a **physical phone or an
+> emulator launched from the desktop** (a headless / SSH-launched emulator has no
+> mic and isn't visible). The setup steps below remain valid for a fresh machine.
 
-On the new laptop (you have Android Studio), pick the fastest path:
+On a machine with Android Studio, pick the fastest path:
 
 ### Option A — physical phone (best for voice; real mic)
 1. Phone → Settings → Developer options → enable **USB debugging**.
@@ -98,9 +107,9 @@ On the new laptop (you have Android Studio), pick the fastest path:
 > manifest). Tap the agent FAB → **Allow AI** → speak, e.g. "open my profile".
 
 ### Definition of done for this task
-- App launches on an Android device/emulator.
-- Text request (e.g. "go to my cart") navigates.
-- Voice: speak a command → it's transcribed correctly → the app navigates, and you
+- [x] App launches on an Android device/emulator. *(✅ 2026-06-05, Pixel 7 / API 34)*
+- [x] Text request (e.g. "go to my cart") navigates. *(✅ agent taps the Cart tab via Gemini)*
+- [ ] Voice: speak a command → it's transcribed correctly → the app navigates, and you
   hear the reply clearly (no choppiness like web).
 
 ---
@@ -121,6 +130,8 @@ EXPO_PUBLIC_MOBILEAI_KEY=
   Gemini API" on the key.
 - **Both** MobileAI lines must be **blank** or `main.dart` routes to the hosted
   proxy and ignores your Gemini key. Blanking them forces direct Gemini.
+  *(Confirmed 2026-06-05: non-blank lines → `[WARN] [FeatureFlag] Fetch failed: 401`
+  and the agent won't run; blanking them fixed it.)*
 - See `.env.example` for the template. Never commit a real key (the repo is public).
 - Alternative (esp. to fix **web text** CORS, and for reliable voice): use the
   hosted proxy instead — set `EXPO_PUBLIC_MOBILEAI_BASE_URL=https://mobileai.cloud`
@@ -145,7 +156,7 @@ and renamed the CMake target to `flutter_sound_plugin`.
 > stub (only `getPlatformVersion`), so **recording/playback do not work on
 > Windows** — that's why Windows voice is impossible.
 
-### `third_party/mobileai_flutter` (patched 0.2.7) — two fixes
+### `third_party/mobileai_flutter` (patched 0.2.7) — three fixes
 1. **`lib/src/widgets/agent_chat_bar.dart`** — the chat box is rendered above
    `MaterialApp`, so it had no `DefaultTextEditingShortcuts`; Backspace/Delete/
    arrows did nothing on desktop. Patch wraps the field in
@@ -154,9 +165,17 @@ and renamed the CMake target to `flutter_sound_plugin`.
    which throws `Unsupported operation: Platform._version` in browsers, so voice
    never connected on web. Patch uses cross-platform `WebSocketChannel.connect` on
    web (`kIsWeb`) and keeps `IOWebSocketChannel` (headers + keep-alive) on native.
+3. **`lib/src/widgets/agent_chat_bar.dart`** (FAB position) — `didChangeDependencies`
+   anchored the launcher FAB once via `_position = Offset(width-80, height-200)`, but
+   on Android the first call fires while the surface is still `0×0`, so it computed a
+   negative offset that clamped to `(0,0)` — the FAB stuck in the **top-left, under the
+   status bar, unclickable** (status-bar inset is 136px; the whole 60×60 FAB sits
+   inside it). Patch: seed `_position` with a large sentinel (the build clamps pull it
+   bottom-right) and only anchor once `size.width/height > 0`. Verified 2026-06-05 on
+   the Pixel AVD — FAB lands bottom-right and opens on tap.
 
 > If you bump either dependency version, re-apply these patches or drop the
-> override. Consider upstreaming all three fixes.
+> override. Consider upstreaming all four fixes.
 
 ---
 
@@ -178,7 +197,8 @@ switch to **Voice**.
 
 ## 8. Backlog / open issues
 
-- [ ] **Run + validate on Android** (section 4) — primary goal: clean voice + nav.
+- [x] **Run + validate on Android — build, launch, text-nav** (section 4) *(✅ 2026-06-05)*.
+- [ ] **Android voice** (section 4) — primary remaining goal: clean voice transcription + nav + audio.
 - [ ] Try **iOS/macOS** too (macOS mic entitlements already added in
       `macos/Runner/*.entitlements` + Info.plist).
 - [ ] **Gemini 503 "model overloaded / high demand"** is transient. Consider adding
@@ -222,5 +242,11 @@ a019efc  Initial commit: ShopFlow demo for mobileai_flutter
   - Web voice (pre-fix): `VoiceService failed to connect: Unsupported operation:
     Platform._version`; (post-fix) connects, but transcript of a spoken command came
     back as `" I"` → `Ignored unusable voice transcript` → no navigation.
+  - Android text (2026-06-05): `Sending request to Gemini. Model: gemini-2.5-flash,
+    Tools: 18` → `🧠 Plan: … tap the "Cart" tab` → `Tool: tap` → `Screen: /cart` →
+    `[ShopFlow] Agent result: …`. Note the **semantic action-safety classifier times
+    out** in this env (`action_safety_preclassification_timeout` → `decision=ask` →
+    `action_safety_approval_required`), so the app shows an **"Allow / Don't Allow"**
+    prompt before each agent tap — just approve it.
 - See `README.md` → Troubleshooting for the "model overloaded" and
   "microphone unavailable" write-ups.

@@ -106,7 +106,10 @@ class _AgentChatBarState extends State<AgentChatBar>
   int _seenMessageCount = 0;
   final TextEditingController _textController = TextEditingController();
   final ScrollController _transcriptScrollController = ScrollController();
-  late Offset _position;
+  // Sentinel: until anchored to a real (non-zero) screen size in
+  // didChangeDependencies, the clamps in build()/_buildFab() pull this to the
+  // bottom-right corner — avoids a 0x0 first frame pinning the FAB top-left.
+  Offset _position = const Offset(100000, 100000);
   bool _initialized = false;
   double _keyboardOffset = 0;
   final List<UserImage> _pendingImages = [];
@@ -131,8 +134,13 @@ class _AgentChatBarState extends State<AgentChatBar>
     super.didChangeDependencies();
     if (!_initialized) {
       final size = MediaQuery.of(context).size;
-      _position = Offset(size.width - 80, size.height - 200);
-      _initialized = true;
+      // On some platforms the first didChangeDependencies fires while the
+      // surface is still 0x0; anchoring then would clamp the FAB into the
+      // top-left corner. Wait for a real size, then anchor bottom-right once.
+      if (size.width > 0 && size.height > 0) {
+        _position = Offset(size.width - 80, size.height - 200);
+        _initialized = true;
+      }
     }
   }
 

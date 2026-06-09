@@ -144,6 +144,11 @@ class VoiceService {
           _channel = null;
           _setStatus('disconnected');
           if (!intentionalDisconnect) {
+            // Drop any session-resumption handle. Replaying a stale handle on
+            // reconnect is rejected by the server (close 1007/1008), which
+            // turns every reconnect into a setup-level failure storm.
+            // Reconnecting without it re-establishes a clean session.
+            _sessionHandle = null;
             final detail = [
               if (code != null) 'code $code',
               if (reason != null && reason.isNotEmpty) reason,

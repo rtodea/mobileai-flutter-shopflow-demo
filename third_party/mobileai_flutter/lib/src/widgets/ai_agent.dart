@@ -170,6 +170,8 @@ class _AIAgentState extends State<AIAgent> {
   AudioOutputService? _audioOutputService;
   Timer? _screenSyncTimer;
   bool _isVoiceConnected = false;
+  int _voiceReconnectAttempts = 0;
+  static const int _maxVoiceReconnectAttempts = 5;
   String? _proxySessionToken;
   bool _isMicMuted = false;
   bool _isSpeakerMuted = false;
@@ -1147,6 +1149,7 @@ class _AIAgentState extends State<AIAgent> {
           });
 
           if (status == 'connected') {
+            _voiceReconnectAttempts = 0;
             Logger.info('Voice connected — starting audio input.');
             final started = await _audioInputService?.start() ?? false;
             Logger.info('Voice audio input start result: $started.');
@@ -1169,10 +1172,27 @@ class _AIAgentState extends State<AIAgent> {
             if (mounted) {
               setState(() => _isAiSpeaking = false);
             }
+            if (_voiceReconnectAttempts >= _maxVoiceReconnectAttempts) {
+              Logger.warn(
+                'VoiceService reconnect giving up after '
+                '$_voiceReconnectAttempts attempts.',
+              );
+              _setStatus('Voice unavailable — tap to retry');
+              return;
+            }
+            _voiceReconnectAttempts++;
+            // Exponential backoff (2s, 4s, 8s, 16s…) so a setup-level rejection
+            // storm can't hammer the server every 2s indefinitely. The counter
+            // resets on a successful 'connected', so a genuine recovery starts
+            // fresh while a never-connecting storm exhausts the cap and stops.
+            final backoffMs =
+                (2000 * (1 << (_voiceReconnectAttempts - 1))).clamp(2000, 16000);
             Logger.warn(
-              'VoiceService disconnected unexpectedly — reconnecting in 2s.',
+              'VoiceService disconnected unexpectedly — reconnecting in '
+              '${backoffMs}ms (attempt $_voiceReconnectAttempts/'
+              '$_maxVoiceReconnectAttempts).',
             );
-            Future<void>.delayed(const Duration(seconds: 2), () {
+            Future<void>.delayed(Duration(milliseconds: backoffMs), () {
               if (!mounted ||
                   _mode != InteractionMode.voice ||
                   _voiceService == null ||

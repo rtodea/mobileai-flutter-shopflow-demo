@@ -1072,6 +1072,18 @@ class _AIAgentState extends State<AIAgent> {
 
     _audioOutputService ??= AudioOutputService(
       config: AudioOutputConfig(
+        onPlaybackEnd: () {
+          // Resume the mic only once the assistant's audio has actually
+          // finished playing — not when the model finishes generating
+          // (onTurnComplete). The model sends turnComplete while up to a few
+          // hundred ms of audio is still buffered; resuming then makes the open
+          // mic capture the assistant's own voice, which the server-side VAD
+          // treats as a new user turn — an echo/feedback loop.
+          if (mounted) {
+            setState(() => _isAiSpeaking = false);
+          }
+          unawaited(_resumeVoiceInputAfterPlayback());
+        },
         onError: (error) => Logger.warn('AudioOutputService: $error'),
       ),
     );
@@ -1198,12 +1210,11 @@ class _AIAgentState extends State<AIAgent> {
           Logger.info('Voice tool cancellation: ${ids.join(', ')}');
         },
         onTurnComplete: () {
-          if (!mounted) return;
-          setState(() {
-            _isAiSpeaking = false;
-          });
+          // The mic is resumed from AudioOutputService.onPlaybackEnd once the
+          // buffered audio has actually drained — not here at model-done, which
+          // would unmute while the assistant is still audibly speaking and feed
+          // its own voice back as a new turn (echo loop).
           _voiceUserHasSpoken = false;
-          unawaited(_resumeVoiceInputAfterPlayback());
         },
         onSetupComplete: () {
           _sendInitialVoiceContext();

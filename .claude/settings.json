@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-CimInstance *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(flutter analyze)",
+      "PowerShell(flutter analyze *)",
+      "PowerShell(flutter doctor)",
+      "PowerShell(flutter doctor *)",
+      "PowerShell(flutter devices)",
+      "PowerShell(flutter emulators)",
+      "PowerShell(flutter --version)"
+    ]
+  }
+}

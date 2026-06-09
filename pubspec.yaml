@@ -69,7 +69,9 @@ dependency_overrides:
   # Patched copy of the SDK: the agent chat box is rendered above MaterialApp, so
   # it lacks DefaultTextEditingShortcuts and Backspace/Delete/arrows don't work on
   # desktop. The patch wraps the field in DefaultTextEditingShortcuts and enables
-  # selection. See third_party/mobileai_flutter/lib/src/widgets/agent_chat_bar.dart.
+  # selection. Also restyles the chat bar with a translucent "liquid glass" look
+  # (BackdropFilter blur) and renders voice mode as an animated orb.
+  # See third_party/mobileai_flutter/lib/src/widgets/agent_chat_bar.dart.
   mobileai_flutter:
     path: third_party/mobileai_flutter
 

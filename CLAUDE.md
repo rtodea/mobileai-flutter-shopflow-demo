@@ -7,8 +7,10 @@ Guidance for Claude Code working in this repository.
 A Flutter demo app (**ShopFlow**, an e-commerce sample) that exercises the
 [`mobileai_flutter`](https://pub.dev/packages/mobileai_flutter) SDK — an in-app,
 UI-aware AI agent with text + voice and screen-aware navigation. It is adapted
-from that package's official `example/` app, but depends on the **published**
-package (`mobileai_flutter: ^0.2.7`) rather than a local path.
+from that package's official `example/` app. It declares the **published**
+package (`mobileai_flutter: ^0.2.7`) but actually builds against a patched
+vendored copy at `third_party/mobileai_flutter` via `dependency_overrides`
+(see gotchas below).
 
 ## Commands
 
@@ -58,6 +60,13 @@ flutter run --dart-define=EXPO_PUBLIC_MOBILEAI_KEY=... --dart-define=GEMINI_API_
   `third_party/flutter_sound/windows/` (added `include/flutter_sound/…_c_api.h`, a
   bridging `FlutterSoundPluginCApiRegisterWithRegistrar` export, and renamed the
   CMake target to `flutter_sound_plugin`). Re-apply if `flutter_sound` is bumped.
+- **mobileai_flutter patches (vendored):** `third_party/mobileai_flutter` is a
+  copy of the published 0.2.7 with local patches, wired via `dependency_overrides`.
+  Patched files (diff against the pub-cache copy to see them):
+  `agent_chat_bar.dart` (desktop text-editing shortcuts; translucent
+  "liquid glass" styling via BackdropFilter; voice mode renders as an animated
+  `_VoiceOrb`), `ai_agent.dart`, `voice_service.dart`, `audio_output_service.dart`
+  (voice stability fixes). Re-apply these if the SDK is bumped.
 - **Gemini "model overloaded" (503)** and **"microphone unavailable"** are usually
   environmental, not bugs: the former is transient Gemini capacity (retry / switch
   model / use the hosted proxy); the latter is usually the wrong default input

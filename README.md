@@ -24,6 +24,10 @@ realistic e‑commerce app called *ShopFlow*.
   - a **direct Gemini** key (`GEMINI_API_KEY`) as a local fallback.
 - **Autopilot mode** — the agent taps, types, and navigates with no approval
   prompts (see [How the AI takes over the UI](#how-the-ai-takes-over-the-ui)).
+- **"Liquid glass" agent UI** — the chat bar is restyled with a translucent,
+  backdrop-blurred (Apple Glass-style) look, and in voice mode the floating
+  button becomes an animated orb that breathes while listening and pulses while
+  the AI speaks (patched in the vendored `third_party/mobileai_flutter`).
 - **Telemetry** through `TelemetryConfig` keyed by the MobileAI publishable key.
 - A deep, multi-level settings flow (Profile → Settings → Notifications →
   Channels → Quiet Hours → Windows → Schedule → Review) so you can watch the

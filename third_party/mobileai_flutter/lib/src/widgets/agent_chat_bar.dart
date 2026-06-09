@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -415,24 +416,59 @@ class _AgentChatBarState extends State<AgentChatBar>
                 onTap: () => setState(_expandChat),
               ),
             ),
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: _fabColor,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 4),
+          if (widget.mode == InteractionMode.voice)
+            _VoiceOrb(
+              isConnected: widget.isVoiceConnected,
+              isSpeaking: widget.isAISpeaking,
+              isMicMuted: widget.isMicMuted,
+              accent: _primaryColor,
+            )
+          else
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.30),
+                      ),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color.alphaBlend(
+                            Colors.white.withValues(alpha: 0.22),
+                            _fabColor.withValues(alpha: 0.45),
+                          ),
+                          _fabColor.withValues(alpha: 0.40),
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: widget.isThinking
+                          ? _LoadingDots(
+                              color: widget.theme?.textColor ?? Colors.white,
+                            )
+                          : const _AIBadge(),
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
-            child: widget.isThinking
-                ? _LoadingDots(color: widget.theme?.textColor ?? Colors.white)
-                : const _AIBadge(),
-          ),
           if (_localUnread > 0)
             Positioned(
               key: const ValueKey('ai-unread-badge'),
@@ -463,22 +499,58 @@ class _AgentChatBarState extends State<AgentChatBar>
     final transcriptMessages = widget.mode == InteractionMode.human
         ? widget.humanMessages
         : widget.messages;
+    // Translucent "liquid glass" panel: the shadow lives on the outer box so
+    // the ClipRRect doesn't cut it off, and the BackdropFilter only blurs
+    // what's behind the rounded rect.
+    final glassBase = _backgroundColor.withValues(
+      alpha: _backgroundColor.a * 0.62,
+    );
     return Container(
       key: const ValueKey('expanded'),
-      width: 340,
       decoration: BoxDecoration(
-        color: _backgroundColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Column(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            width: 340,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.alphaBlend(
+                    Colors.white.withValues(alpha: 0.10),
+                    glassBase,
+                  ),
+                  glassBase,
+                ],
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: _buildExpandedContent(isArabic, transcriptMessages),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedContent(
+    bool isArabic,
+    List<AiMessage> transcriptMessages,
+  ) {
+    return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildDragHandle(),
@@ -513,7 +585,6 @@ class _AgentChatBarState extends State<AgentChatBar>
               _buildTextInputRow(isArabic),
           ],
         ],
-      ),
     );
   }
 
@@ -1713,6 +1784,147 @@ class _ImagePickerInstance {
     // At runtime, this will be replaced if image_picker is available.
     // Without it, return null.
     return null;
+  }
+}
+
+// ─── Voice Orb ────────────────────────────────────────────────
+
+/// Animated "liquid glass" orb shown instead of the FAB while in voice mode.
+/// Breathes slowly while listening, pulses faster and brighter while the AI
+/// is speaking, dims when the mic is muted, and glows amber while connecting.
+class _VoiceOrb extends StatefulWidget {
+  final bool isConnected;
+  final bool isSpeaking;
+  final bool isMicMuted;
+  final Color accent;
+
+  const _VoiceOrb({
+    required this.isConnected,
+    required this.isSpeaking,
+    required this.isMicMuted,
+    required this.accent,
+  });
+
+  @override
+  State<_VoiceOrb> createState() => _VoiceOrbState();
+}
+
+class _VoiceOrbState extends State<_VoiceOrb>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, _) {
+        // Integer cycle counts keep the sine continuous across the
+        // controller's 0→1 wrap-around.
+        final cycles = widget.isSpeaking ? 3 : 1;
+        final wave =
+            0.5 + 0.5 * math.sin(_pulse.value * cycles * 2 * math.pi);
+
+        final Color core;
+        final Color halo;
+        if (!widget.isConnected) {
+          core = const Color(0xFFFFCC00);
+          halo = const Color(0xFFFFB300);
+        } else if (widget.isMicMuted && !widget.isSpeaking) {
+          core = const Color(0xFF8E8E93);
+          halo = const Color(0xFF636366);
+        } else if (widget.isSpeaking) {
+          core = const Color(0xFF34C759);
+          halo = const Color(0xFF30D5C8);
+        } else {
+          core = widget.accent;
+          halo = const Color(0xFF5AC8FA);
+        }
+
+        final scale = 1 + (widget.isSpeaking ? 0.09 : 0.035) * wave;
+        final glow = (widget.isSpeaking ? 0.55 : 0.30) +
+            (widget.isSpeaking ? 0.25 : 0.12) * wave;
+
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: halo.withValues(alpha: glow),
+                  blurRadius: 26,
+                  spreadRadius: 2,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.45),
+                        ),
+                        gradient: RadialGradient(
+                          center: const Alignment(-0.35, -0.45),
+                          radius: 1.15,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.55),
+                            core.withValues(alpha: 0.55),
+                            halo.withValues(alpha: 0.45),
+                          ],
+                          stops: const [0.0, 0.55, 1.0],
+                        ),
+                      ),
+                    ),
+                    // Specular highlight for the glassy "sphere" read.
+                    Align(
+                      alignment: const Alignment(-0.45, -0.55),
+                      child: Container(
+                        width: 16,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white.withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ),
+                    if (widget.isConnected && widget.isMicMuted)
+                      Center(
+                        child: Icon(
+                          Icons.mic_off_rounded,
+                          size: 18,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

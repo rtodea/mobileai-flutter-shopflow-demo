@@ -333,34 +333,41 @@ class _AgentChatBarState extends State<AgentChatBar>
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     _keyboardOffset = mediaQuery.viewInsets.bottom;
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
+    // Some devices (e.g. certain MIUI builds) report a zero-size surface on the
+    // first frame. Clamping a position into a negative range — width - 70 when
+    // width is 0 — makes lowerLimit > upperLimit and double.clamp throws an
+    // ArgumentError. Guard every upper limit so it can never fall below its
+    // lower limit.
+    final double maxX = (screenWidth - 70).clamp(0.0, double.infinity);
+    final double collapsedMaxY =
+        (screenHeight - 80).clamp(0.0, double.infinity);
+    final double expandedMaxY =
+        (screenHeight - 400).clamp(100.0, double.infinity);
+    final double expandedLeft =
+        ((screenWidth - 340) / 2).clamp(0.0, double.infinity);
 
     return Positioned(
-      left: _isExpanded
-          ? (MediaQuery.of(context).size.width - 340) / 2
-          : _position.dx.clamp(0, MediaQuery.of(context).size.width - 70),
+      left: _isExpanded ? expandedLeft : _position.dx.clamp(0.0, maxX),
       top:
           (_isExpanded
-              ? _position.dy.clamp(
-                  100,
-                  MediaQuery.of(context).size.height - 400,
-                )
-              : _position.dy.clamp(
-                  0,
-                  MediaQuery.of(context).size.height - 80,
-                )) -
+              ? _position.dy.clamp(100.0, expandedMaxY)
+              : _position.dy.clamp(0.0, collapsedMaxY)) -
           _keyboardOffset,
       child: GestureDetector(
         onPanUpdate: (details) {
           setState(() {
+            final dragMaxX =
+                (MediaQuery.of(context).size.width - (_isExpanded ? 340 : 70))
+                    .clamp(0.0, double.infinity);
+            final dragMaxY =
+                (MediaQuery.of(context).size.height - (_isExpanded ? 300 : 80))
+                    .clamp(0.0, double.infinity);
             _position = Offset(
-              (_position.dx + details.delta.dx).clamp(
-                0,
-                MediaQuery.of(context).size.width - (_isExpanded ? 340 : 70),
-              ),
-              (_position.dy + details.delta.dy).clamp(
-                0,
-                MediaQuery.of(context).size.height - (_isExpanded ? 300 : 80),
-              ),
+              (_position.dx + details.delta.dx).clamp(0.0, dragMaxX),
+              (_position.dy + details.delta.dy).clamp(0.0, dragMaxY),
             );
           });
         },
@@ -385,7 +392,8 @@ class _AgentChatBarState extends State<AgentChatBar>
 
   Widget _buildFab() {
     final mediaSize = MediaQuery.of(context).size;
-    final fabX = _position.dx.clamp(0.0, mediaSize.width - 70);
+    final maxFabX = (mediaSize.width - 70).clamp(0.0, double.infinity);
+    final fabX = _position.dx.clamp(0.0, maxFabX);
     final showPreview = _localUnread > 0;
     final previewAlignRight = fabX > mediaSize.width / 2;
     return GestureDetector(

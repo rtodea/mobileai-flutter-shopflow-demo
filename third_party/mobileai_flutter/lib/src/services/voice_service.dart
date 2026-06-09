@@ -11,8 +11,11 @@ import '../utils/logger.dart';
 
 typedef VoiceStatus = String;
 
-const String _defaultLiveModel =
-    'gemini-2.5-flash-native-audio-preview-12-2025';
+// Half-cascade Live model. The native-audio preview models sound more natural
+// but are unstable for tool-heavy agentic sessions — they close the socket
+// mid-turn with 1007/1008/1011 around function calls. This model has robust
+// function-calling support and stays connected through the agent's tool loop.
+const String _defaultLiveModel = 'gemini-3.1-flash-live-preview';
 const int _defaultInputSampleRate = 16000;
 const String _defaultLiveEndpoint =
     'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';

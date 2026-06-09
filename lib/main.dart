@@ -48,6 +48,12 @@ class ShopFlowApp extends StatelessWidget {
       instructions:
           'You are a helpful assistant for ShopFlow, an e-commerce app.',
       enableVoice: true,
+      // Demo: let the agent act fully autonomously with no approval prompts.
+      // autopilot bypasses the workflow-approval gate (and survives the
+      // per-command reset); disabling actionSafety also turns off the
+      // per-action safety classifier. Together = no "Allow / Don't Allow".
+      interactionMode: AppInteractionMode.autopilot,
+      actionSafety: const ActionSafetyConfig(enabled: false),
       debug: true,
       screenMap: shopFlowScreenMap,
       conversationPersistenceKey: 'shopflow-example',

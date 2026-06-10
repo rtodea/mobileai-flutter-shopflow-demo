@@ -25,6 +25,10 @@ class VoiceServiceConfig {
   final String? proxyUrl;
   final Map<String, String>? proxyHeaders;
   final String? model;
+
+  /// Gemini Live prebuilt voice name (e.g. 'Aoede', 'Charon'). When null/empty
+  /// the model picks an unspecified default that can vary across reconnects.
+  final String? voiceName;
   final String? systemPrompt;
   final List<ToolDefinition> tools;
   final int inputSampleRate;
@@ -35,6 +39,7 @@ class VoiceServiceConfig {
     this.proxyUrl,
     this.proxyHeaders,
     this.model,
+    this.voiceName,
     this.systemPrompt,
     this.tools = const [],
     this.inputSampleRate = _defaultInputSampleRate,
@@ -303,6 +308,17 @@ class VoiceService {
           : 'models/$modelName',
       'generationConfig': <String, dynamic>{
         'responseModalities': const <String>['AUDIO'],
+        // Pin a fixed voice so it stays stable across reconnects. Without this
+        // each fresh Live session gets an unspecified default that can flip
+        // between male/female voices.
+        if (config.voiceName?.trim().isNotEmpty == true)
+          'speechConfig': <String, dynamic>{
+            'voiceConfig': <String, dynamic>{
+              'prebuiltVoiceConfig': <String, dynamic>{
+                'voiceName': config.voiceName!.trim(),
+              },
+            },
+          },
       },
       'realtimeInputConfig': <String, dynamic>{
         'automaticActivityDetection': <String, dynamic>{},

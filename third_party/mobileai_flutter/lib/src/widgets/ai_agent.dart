@@ -37,6 +37,10 @@ class AIAgent extends StatefulWidget {
   final Map<String, String>? voiceProxyHeaders;
   final String? model;
 
+  /// Gemini Live prebuilt voice name for voice mode (e.g. 'Aoede', 'Charon').
+  /// Null/empty lets the model choose a default that may vary across sessions.
+  final String? voiceName;
+
   final int maxSteps;
   final String? instructions;
   final dynamic router;
@@ -86,6 +90,7 @@ class AIAgent extends StatefulWidget {
     this.voiceProxyUrl,
     this.voiceProxyHeaders,
     this.model,
+    this.voiceName,
     this.maxSteps = 15,
     this.instructions,
     this.router,
@@ -1116,6 +1121,7 @@ class _AIAgentState extends State<AIAgent> {
         proxyUrl: widget.voiceProxyUrl ?? _resolvedProxyUrl,
         proxyHeaders: widget.voiceProxyHeaders ?? _effectiveProxyHeaders,
         model: widget.model,
+        voiceName: widget.voiceName,
         systemPrompt: buildVoiceSystemPrompt(
           widget.language,
           hasKnowledge: false,

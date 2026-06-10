@@ -23,6 +23,12 @@ class ShopFlowApp extends ConsumerWidget {
       'EXPO_PUBLIC_MOBILEAI_KEY',
       defaultValue: 'mobileai_pub_37aef8662883f2eba40dfc70763f4ef5b1a1a686',
     );
+    // Gemini Live prebuilt voice for the voice agent. Defaults to Aoede (female).
+    // See the voice list/preview link in .env.example.
+    const mobileAiVoice = String.fromEnvironment(
+      'EXPO_PUBLIC_MOBILEAI_VOICE',
+      defaultValue: 'Aoede',
+    );
 
     final normalizedBaseUrl = _normalizeBaseUrl(mobileAiBaseUrl);
     final textProxyUrl = normalizedBaseUrl == null
@@ -43,6 +49,7 @@ class ShopFlowApp extends ConsumerWidget {
       proxyHeaders: proxyHeaders,
       voiceProxyUrl: voiceProxyUrl,
       voiceProxyHeaders: proxyHeaders,
+      voiceName: mobileAiVoice,
       router: router,
       maxSteps: 15,
       language: 'en',

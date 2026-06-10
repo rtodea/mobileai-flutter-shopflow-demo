@@ -59,7 +59,7 @@ class HomeScreen extends ConsumerWidget {
                                width: 90,
                                margin: const EdgeInsets.only(right: 16),
                                decoration: BoxDecoration(
-                                 color: Colors.white,
+                                 color: Theme.of(context).colorScheme.surfaceContainerHigh,
                                  borderRadius: BorderRadius.circular(16),
                                  boxShadow: const [
                                    BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))
@@ -147,7 +147,7 @@ class HomeScreen extends ConsumerWidget {
         width: width,
         margin: width != null ? const EdgeInsets.only(right: 16) : null,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))

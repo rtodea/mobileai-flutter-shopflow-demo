@@ -65,9 +65,9 @@ class CartScreen extends ConsumerWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))
                     ],
                   ),

@@ -196,3 +196,18 @@ final notificationPreferencesProvider =
     NotifierProvider<NotificationPreferencesNotifier, NotificationPreferencesState>(
       NotificationPreferencesNotifier.new,
     );
+
+/// App-wide light/dark theme selection. Watched by [MaterialApp] in main.dart
+/// and driven by the Dark Mode switch in the profile settings screen.
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() => ThemeMode.light;
+
+  void setDarkMode(bool enabled) {
+    state = enabled ? ThemeMode.dark : ThemeMode.light;
+  }
+}
+
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);

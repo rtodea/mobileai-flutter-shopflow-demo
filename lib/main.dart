@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobileai_flutter/mobileai_flutter.dart';
 import 'ai_screen_map.dart';
+import 'providers/preferences_provider.dart';
 import 'router.dart';
 
 void main() {
   runApp(const ProviderScope(child: ShopFlowApp()));
 }
 
-class ShopFlowApp extends StatelessWidget {
+class ShopFlowApp extends ConsumerWidget {
   const ShopFlowApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
     const mobileAiBaseUrl = String.fromEnvironment(
       'EXPO_PUBLIC_MOBILEAI_BASE_URL',
@@ -72,6 +73,14 @@ class ShopFlowApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple,
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
+        ),
+        themeMode: ref.watch(themeModeProvider),
         routerConfig: router,
       ),
     );

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class ProfileSettingsScreen extends StatefulWidget {
+import '../providers/preferences_provider.dart';
+
+class ProfileSettingsScreen extends ConsumerStatefulWidget {
   const ProfileSettingsScreen({Key? key}) : super(key: key);
 
   @override
-  State<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
+  ConsumerState<ProfileSettingsScreen> createState() =>
+      _ProfileSettingsScreenState();
 }
 
-class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
-  bool _darkMode = false;
+class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   double _volume = 50;
   DateTime? _birthDate;
 
@@ -36,8 +39,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           const SizedBox(height: 16),
           SwitchListTile(
             title: const Text('Dark Mode'),
-            value: _darkMode,
-            onChanged: (val) => setState(() => _darkMode = val),
+            value: ref.watch(themeModeProvider) == ThemeMode.dark,
+            onChanged: (val) =>
+                ref.read(themeModeProvider.notifier).setDarkMode(val),
           ),
           const SizedBox(height: 16),
           const Text('Alert Volume', style: TextStyle(fontWeight: FontWeight.bold)),

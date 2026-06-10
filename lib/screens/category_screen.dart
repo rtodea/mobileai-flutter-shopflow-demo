@@ -50,7 +50,7 @@ class CategoryScreen extends ConsumerWidget {
       onTap: () => context.push('/product/${prod.id}'),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))

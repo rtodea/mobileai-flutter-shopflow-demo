@@ -73,15 +73,24 @@ if (-not $device -and -not $NoLaunch) {
 
 if (-not $device) { throw "No running emulator and -NoLaunch was set." }
 
-# Wait for full boot (package manager + boot_completed).
+# Wait for full boot (boot_completed). While the emulator is still coming up,
+# adb can emit transient stderr ("error: closed", "device offline"). Do NOT
+# redirect adb's stderr (2>$null/2>&1) here: under ErrorActionPreference='Stop'
+# that wraps the line as a terminating NativeCommandError and kills the script.
+# Instead tolerate hiccups and bail clearly only if the emulator truly vanishes.
 Write-Host "Waiting for '$device' to finish booting ..." -ForegroundColor DarkGray
-& $adb -s $device wait-for-device
-$deadline = (Get-Date).AddSeconds(120)
+$deadline = (Get-Date).AddSeconds(180)
+$booted = $false
 while ((Get-Date) -lt $deadline) {
-    $booted = (& $adb -s $device shell getprop sys.boot_completed 2>$null).Trim()
-    if ($booted -eq '1') { break }
+    if (-not ((& $adb devices) -match [regex]::Escape($device))) {
+        throw "Emulator '$device' disappeared while booting (it likely crashed). Re-run the script."
+    }
+    $prop = ''
+    try { $prop = (& $adb -s $device shell getprop sys.boot_completed | Out-String).Trim() } catch { $prop = '' }
+    if ($prop -eq '1') { $booted = $true; break }
     Start-Sleep -Seconds 2
 }
+if (-not $booted) { throw "Emulator '$device' did not finish booting within 180s." }
 Write-Host "Emulator ready: $device" -ForegroundColor Green
 
 Invoke-FlutterDeploy -Device $device -Mode $Mode -Release:$Release

@@ -218,6 +218,7 @@ defines). All are optional — sensible defaults are baked in:
 | `EXPO_PUBLIC_MOBILEAI_BASE_URL`  | `https://mobileai.cloud`      | Base URL for the hosted text/voice proxy + telemetry |
 | `EXPO_PUBLIC_MOBILEAI_KEY`       | a demo `mobileai_pub_…` key   | MobileAI publishable key (`Authorization: Bearer`)   |
 | `GEMINI_API_KEY`                 | _(empty)_                     | Direct Gemini key; used only if no proxy is set      |
+| `EXPO_PUBLIC_MOBILEAI_VOICE`     | `Aoede`                       | Gemini Live prebuilt voice; pins it so it doesn't drift between male/female across reconnects (see `.env.example` for the voice list + preview links) |
 
 > The defaults point at the public MobileAI cloud with a **publishable** key, so
 > the demo works out of the box. To use your own backend or Gemini key, override
@@ -464,6 +465,39 @@ flutter build macos      # macOS desktop
 
 See the package docs for the full API:
 <https://pub.dev/packages/mobileai_flutter>.
+
+---
+
+## Where the agent's prompt lives
+
+The system prompt the model sees is assembled in two layers by
+`third_party/mobileai_flutter/lib/src/core/system_prompt.dart`:
+
+1. **App-level instructions — edit these.** `lib/main.dart` passes
+   `instructions:` to the `AIAgent`. That string is wrapped in
+   `<app_instructions>…</app_instructions>` and appended to **every** prompt
+   (text *and* voice), so it's the right place for ShopFlow-specific persona,
+   tone, and do/don't rules:
+
+   ```dart
+   instructions: 'You are a helpful assistant for ShopFlow, an e-commerce app.',
+   ```
+
+2. **SDK base prompt — the bulk of the behavior.** The core agent persona and
+   rules live in the **generated** bundle
+   `third_party/mobileai_flutter/lib/src/core/rn_prompt_bundle.g.dart`
+   (generated upstream from `react-native-ai-agent/src/core/systemPrompt.ts`),
+   keyed by mode / language / support style. `system_prompt.dart` selects the
+   right one — `buildSystemPrompt` for text, `buildVoiceSystemPrompt` for voice
+   — then layers on a `<runtime_behavior>` block and, for voice, a
+   `<voice_language_guard>` block.
+
+For most tuning, change the `instructions:` string in `lib/main.dart`. Deeper
+changes mean editing the vendored `.g.dart` (and re-applying if the SDK is
+bumped — see the vendored-package note in `CLAUDE.md`).
+
+The **voice** the agent speaks with is separate from the prompt — set it via
+`EXPO_PUBLIC_MOBILEAI_VOICE` (see the config table above).
 
 ---
 

@@ -12,15 +12,12 @@ realistic e‑commerce app called *ShopFlow*.
 
 ## Demo
 
-<!-- GitHub only renders an inline video player for files uploaded through its
-     web editor (drag & drop) — a committed file or relative link won't embed.
-     To activate the player: edit this README on github.com and drag
-     media/session_full.mp4 onto the line below this comment; GitHub uploads it
-     and inserts a user-attachments URL that renders as a player. -->
+> Please enable sound 🔊 on the video
 
-[▶ Watch the recorded session](media/session_full.mp4) — a real text + voice
-agent session on a physical Android phone (1080×1920, ~8 MB; GitHub opens it
-with an inline player).
+https://github.com/user-attachments/assets/00156edf-54b4-4b32-96a7-f963f5c9cd8e
+
+[▶ Download the recorded session](media/session_full.mp4) — a real text + voice
+agent session on a physical Android phone (1080×1920, ~8 MB).
 
 ---
 

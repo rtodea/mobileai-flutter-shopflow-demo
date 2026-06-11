@@ -10,6 +10,18 @@ realistic e‑commerce app called *ShopFlow*.
 > wired to depend on the published `mobileai_flutter` package from pub.dev so you
 > can clone and run it directly.
 
+## Demo
+
+<!-- GitHub only renders an inline video player for files uploaded through its
+     web editor (drag & drop) — a committed file or relative link won't embed.
+     To activate the player: edit this README on github.com and drag
+     media/session_full.mp4 onto the line below this comment; GitHub uploads it
+     and inserts a user-attachments URL that renders as a player. -->
+
+[▶ Watch the recorded session](media/session_full.mp4) — a real text + voice
+agent session on a physical Android phone (1080×1920, ~8 MB; GitHub opens it
+with an inline player).
+
 ---
 
 ## What it demonstrates

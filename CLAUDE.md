@@ -65,7 +65,9 @@ flutter run --dart-define=EXPO_PUBLIC_MOBILEAI_KEY=... --dart-define=GEMINI_API_
   Patched files (diff against the pub-cache copy to see them):
   `agent_chat_bar.dart` (desktop text-editing shortcuts; translucent
   "liquid glass" styling via BackdropFilter; voice mode renders as an animated
-  `_VoiceOrb`), `ai_agent.dart`, `voice_service.dart`, `audio_output_service.dart`
+  `_VoiceOrb`), `ai_agent.dart` (adds `restoreConversationHistory` flag — the
+  demo passes `false` so past conversations aren't restored after relaunch),
+  `voice_service.dart`, `audio_output_service.dart`
   (voice stability fixes). Re-apply these if the SDK is bumped.
 - **Gemini "model overloaded" (503)** and **"microphone unavailable"** are usually
   environmental, not bugs: the former is transient Gemini capacity (retry / switch

@@ -53,6 +53,13 @@ class AIAgent extends StatefulWidget {
   final bool debug;
   final AIConsentConfig? consent;
   final String? conversationPersistenceKey;
+
+  /// Whether to fetch past conversations from the backend at startup and
+  /// show them in the chat bar's History panel. When false, History only
+  /// lists conversations started during the current app run, so the agent
+  /// effectively resets when the app exits. Defaults to true.
+  final bool restoreConversationHistory;
+
   final TelemetryConfig? telemetry;
   final SupportModeConfig supportMode;
   final AppInteractionMode interactionMode;
@@ -103,6 +110,7 @@ class AIAgent extends StatefulWidget {
     this.debug = false,
     this.consent,
     this.conversationPersistenceKey,
+    this.restoreConversationHistory = true,
     this.telemetry,
     this.supportMode = const SupportModeConfig(),
     this.interactionMode = AppInteractionMode.copilot,
@@ -553,6 +561,13 @@ class _AIAgentState extends State<AIAgent> {
   }
 
   Future<void> _loadConversationHistoryIfNeeded() async {
+    if (!widget.restoreConversationHistory) {
+      if (!mounted) return;
+      setState(() => _isLoadingConversationHistory = false);
+      _updateController();
+      return;
+    }
+
     final analyticsKey = _analyticsKey;
     if (analyticsKey == null) {
       if (!mounted) return;

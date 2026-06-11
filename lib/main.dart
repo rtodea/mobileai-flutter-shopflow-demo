@@ -65,6 +65,9 @@ class ShopFlowApp extends ConsumerWidget {
       debug: true,
       screenMap: shopFlowScreenMap,
       conversationPersistenceKey: 'shopflow-example',
+      // Don't restore past conversations from the backend after a relaunch —
+      // the agent starts with a clean slate every time the app is opened.
+      restoreConversationHistory: false,
       telemetry: mobileAiAnalyticsKey.isEmpty
           ? null
           : TelemetryConfig(
